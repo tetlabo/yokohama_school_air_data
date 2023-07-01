@@ -1,0 +1,34 @@
+name: update data
+
+# Controls when the action will run.
+on:
+  push:
+  schedule:
+    - cron:  '0 6,18 * * *'
+
+
+jobs:
+  run-scraping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: Install libraries
+        run: |
+          sudo apt update
+          sudo apt install libcurl4-openssl-dev libharfbuzz-dev libfribidi-dev
+      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-renv@v2
+      - name: Run data update script
+        shell: Rscript {0}
+        run: |
+          source("get_yokohama_air_value.R")
+      - name: Update data
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "update data"
+          git push
+          git lfs prune
